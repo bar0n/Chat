@@ -10,7 +10,7 @@
   </appender>
   
    <appender name="server" class="org.apache.log4j.DailyRollingFileAppender">
-    <param name="File" value="e:/demo/server.log"/>
+    <param name="File" value="server.log"/>
     <param name="DatePattern" value="'.'dd-MM-yyyy'.log'"/>
     <param name="Encoding" value="UTF-8"/>
     <layout class="org.apache.log4j.PatternLayout">
@@ -18,13 +18,13 @@
     </layout>
   </appender> 
   
-  <logger name = "com.onpu.courses.networks.server"   additivity = "false">
+ <!--  <logger name = "com.onpu.courses.networks.server"   additivity = "false">
     <level value= "DEBUG"/>
     <appender-ref ref="server"/>
-  </logger>
+  </logger> -->
   
   <root>
-    <level value= "FATAL" />
+    <level value= "INFO" />
     <appender-ref ref="console"/>
   </root>
  
