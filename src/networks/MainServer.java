@@ -3,7 +3,7 @@ package networks;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
-import networks.server.presenter.Controller;
+import networks.server.presenter.ChatServer;
 import networks.server.view.ServerFrame;
 
 public class MainServer {
@@ -12,7 +12,7 @@ public class MainServer {
 		
 		final ServerFrame view =  new ServerFrame();
 		@SuppressWarnings("unused")
-		Controller controller = new Controller(view);
+		ChatServer controller = new ChatServer(view);
 		
 		SwingUtilities.invokeLater(new Runnable() {
 			

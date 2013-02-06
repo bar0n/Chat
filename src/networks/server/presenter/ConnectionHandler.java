@@ -4,6 +4,8 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Collection;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.BlockingQueue;
 
@@ -16,10 +18,12 @@ public class ConnectionHandler implements Runnable{
 	private boolean running;
 	private PrintWriter out;
 	private Scanner in;
-	public ConnectionHandler(Socket client, BlockingQueue<String> buffer) {
+	Collection<ConnectionHandler> handlers;
+	public ConnectionHandler(Socket client, BlockingQueue<String> buffer, Collection<ConnectionHandler> handlers) {
 		
 		this.client = client;
 		this.buffer = buffer;
+		this.handlers = handlers;
 		running = true;
 		
 	}
@@ -39,10 +43,32 @@ public class ConnectionHandler implements Runnable{
 				String nextLine = in.nextLine();
 				buffer.offer(nextLine);
 			}
-		} catch (IOException e) {
-			LOG.error("Unexpected exceprion", e);
+		}
+		catch(NoSuchElementException e){
+			LOG.info("Client down");
+		}
+		catch (IOException e) {
+			LOG.error("Unexpected exceprion ", e);	
+		}
+		finally{
+			handlers.remove(this);
 		}
 		
+	}
+
+	public void stop() {
+		
+		try {
+			out.println("Server close:");
+			out.flush();
+			out.close();
+			client.close();			
+			in.close();						
+			
+		} catch (IOException e) {
+			
+			LOG.error("Unexpected exceprion ", e);	
+		}		
 	}
 
 }

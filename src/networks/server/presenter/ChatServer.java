@@ -17,9 +17,8 @@ import networks.server.view.ServerFrame;
 
 import org.apache.log4j.Logger;
 
-public class Controller {
-	private static final Logger LOG = Logger.getLogger(Controller.class
-			.getName());
+public class ChatServer {
+	private static final Logger LOG = Logger.getLogger(ChatServer.class.getName());
 
 	private static final int MAX_CLIENTS = 10;
 	private ServerFrame view;
@@ -34,14 +33,13 @@ public class Controller {
 
 	private ExecutorService executor;
 
-	public Controller(ServerFrame view) {
-		
+	public ChatServer(ServerFrame view) {
+
 		this.view = view;
 		state = true;
 		view.setState(state);
 		view.addMessageToLog("to start listen client push button start");
-		registerListeners();
-		executor = Executors.newFixedThreadPool(MAX_CLIENTS);
+		registerListeners();		
 		createUnexpectedErrorHandler();
 	}
 
@@ -51,15 +49,15 @@ public class Controller {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				Runnable thread = new Runnable() {
-					
+
 					@Override
 					public void run() {
 						startServer();
-						
+
 					}
 				};
 				new Thread(thread).start();
-			
+
 			}
 
 		});
@@ -67,8 +65,16 @@ public class Controller {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				stopServer();
-				view.addMessageToLog("stoping server");
+
+				Runnable thread = new Runnable() {
+
+					@Override
+					public void run() {
+						stopServer();
+
+					}
+				};
+				new Thread(thread).start();
 
 			}
 
@@ -78,38 +84,60 @@ public class Controller {
 	private void startServer() {
 		try {
 			LOG.info("starting server with port: " + port);
-			server = new ServerSocket(port);			
+			server = new ServerSocket(port);
 			LOG.info("Server started");
 		} catch (IOException e) {
-			LOG.error("Error starting Server", e);
+			 LOG.error("Error starting Server", e);
+			 return;
 		}
-		state =!state;
+		state = !state;
 		view.setState(state);// now state is listen new client;
 		view.addMessageToLog("Server started");
+
+		new Thread(new MessageSender(buffer, handlers)).start();
 		
-		new Thread(new MessageSender(buffer,handlers)).start();
+		executor = Executors.newFixedThreadPool(MAX_CLIENTS);
 		
 		while (!state) {
-			try {
-				Socket client = server.accept();
-				ConnectionHandler handler = new ConnectionHandler(client,
-						buffer);
+			
+				Socket client=null;
+				try {
+					client = server.accept();
+				} catch (IOException e) {
+					LOG.error("Connection not accepted", e);					
+					continue;
+				}
+				
+				
+				ConnectionHandler handler = new ConnectionHandler(client, buffer, handlers);
+				
 				handlers.add(handler);
 				executor.execute(handler);
 				view.addMessageToLog("new client attached , total clients: "
 						+ handlers.size());
-				LOG.info("accept new clients, total clients: "
-						+ handlers.size());
-
-			} catch (IOException e) {
-				LOG.error("exceprion while listening client", e);
-			}
+				 LOG.info("accept new clients, total clients: "+ handlers.size());
+			
 		}
-
 	}
 
 	private void stopServer() {
+		state = !state;
+		System.out.println("server stoped");
+		for (ConnectionHandler handler : handlers) {
+			handler.stop();
+		}
+		handlers.clear();
+		executor.shutdownNow();
+		
+		try {
+			server.close();
+		} catch (IOException e) {
 
+			LOG.error("server colosing  ", e);
+			
+		}
+		view.setState(state);
+		view.addMessageToLog("server stoped");
 	}
 
 	private void createUnexpectedErrorHandler() {
@@ -117,7 +145,8 @@ public class Controller {
 
 			@Override
 			public void uncaughtException(Thread t, Throwable e) {
-				LOG.error("Unexpected exceprion", e);
+				LOG.error("uncaught Exception ", e);
+				
 			}
 		});
 	}

@@ -8,13 +8,15 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 public class ServerFrame extends JFrame {
 	
 	private static final long serialVersionUID = -8508450805503580959L;
     JButton start = new JButton("Start");
     JButton stop = new JButton("Stop");
-    TextArea log = new TextArea();
+    TextArea log = new TextArea("",20,40,TextArea.SCROLLBARS_BOTH);
+    
     public ServerFrame(){
     	
     	setLayout(new BorderLayout());
@@ -24,11 +26,17 @@ public class ServerFrame extends JFrame {
     	
     	southPanel.add(stop);
     	southPanel.add(start);
+    	
     	log.setEditable(false);
-    	add(log,"Center");
+       	
+    	JScrollPane sp = new JScrollPane(log);
+
+		add(sp, "Center");
+		
     	add(southPanel,"South");
     	
     	pack();
+    	
     }
     
    

@@ -6,7 +6,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
 import networks.client.ChatClient;
-import networks.client.ChatFrame;
+import networks.client.view.ChatFrame;
 
 public class MainClient {
 

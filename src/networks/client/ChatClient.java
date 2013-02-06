@@ -9,6 +9,8 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
+import networks.client.view.ChatFrame;
+
 import org.apache.log4j.Logger;
 
 public class ChatClient implements Runnable {
@@ -16,7 +18,7 @@ public class ChatClient implements Runnable {
 	private static final Logger LOG = Logger.getLogger(ChatClient.class.getName());
 	
 	private Socket conn;
-	private Scanner in;
+	
 	private PrintWriter out;
 	private Scanner userInput;
 	private InetAddress host;
@@ -43,7 +45,7 @@ public class ChatClient implements Runnable {
 		this.port = port;
 	}
 
-	void startClient() {
+	public void startClient() {
 		try {
 			this.conn = new Socket(host, port);
 			
@@ -64,16 +66,29 @@ public class ChatClient implements Runnable {
 			this.host = InetAddress.getByName(host);
 		} catch (UnknownHostException e) {
 			
-			e.printStackTrace();
+			LOG.error("Unable to resolve host: "+host, e);	
 		}
 	}
 
 	public void run() {
 			
 		String message = null;
-		while(true) {
-			message = userInput.nextLine();
-			view.addMessage(message);
+		try {
+			while (true) {
+				message = userInput.nextLine();
+				view.addMessage(message);
+			}
+		} catch (Exception e) {
+			LOG.info("Stop client", e);
+			if (userInput!=null) userInput.close();
+			if (out!=null) out.close();
+			try {
+				conn.close();
+			} catch (IOException e1) {
+				LOG.error("Unable to close client Socket.", e);				
+			}
+			conn=null; 
+			view.readyToConnect();			 
 		}
 	}
 
